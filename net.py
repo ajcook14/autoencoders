@@ -57,18 +57,32 @@ class Net():
 
 
 
-    def SGD(self, training_data, epochs, size_minibatch, eta):
+    def SGD(self, training_data, epochs, size_minibatch, size_validation, eta):
         """
+        inputs:
         training_data: list of tuples of type (<class 'numpy.ndarray'>, <class 'numpy.ndarray'>), where
-            the entries obey (input, output)
+            the entries obey (input, output). Includes validation data.
         size_minibatch: <class 'int'>
+        size_validation: <class 'int'>, the number of data points to be set aside for validation in
+            each epoch. Taken from training_data once shuffled.
+
+        output:
+        validation_costs: <class 'numpy.ndarray'>
         """
 
-        size_data = len(training_data)
+        size_total = len(training_data)
 
         data_shuffled = copy.deepcopy(training_data)
 
         random.shuffle(data_shuffled)
+
+        assert size_validation < size_total, "Validation set is bigger than or equal to the whole dataset."
+        validation_data = data_shuffled[:size_validation]
+        data_shuffled = data_shuffled[size_validation:]
+
+        validation_costs = []
+
+        size_data = size_total - size_validation
 
         for epoch in range(epochs):
 
@@ -83,23 +97,34 @@ class Net():
             # perform backpropagation for remainding training samples
             n = size_data // size_minibatch
 
-            remainder_index = (size_data // size_minibatch) * size_minibatch
+            remainder_index = n * size_minibatch
 
             if (remainder_index < size_data - 1):
 
-                minibatch = data_shuffled[n*size_minibatch:]
+                minibatch = data_shuffled[remainder_index:]
 
                 self.backpropagation(minibatch, eta)
 
-            # validation to be added here
+            # validation
+            cost_total = 0
+
+            for sample_i in range(size_validation):
+
+                sample = validation_data[sample_i]
+
+                cost_total += self.cost(sample[0], sample[1])
+
+            cost_avg = cost_total / size_validation
+
+            validation_costs.append(cost_avg)
+
+        return(np.array(validation_costs))
 
     def backpropagation(self, minibatch, eta):
+        ########### NEEDS FIXING: indexing issue with case of 1 layer #############
         """
         minibatch: see training_data in self.SGD (a list of tuples)
         """
-
-        # start with only updating the weights and biases in the last layer
-        # start by assuming there is only one layer (excluding the input layer)
 
         m = len(minibatch)
         L = len(self.layers) - 1  # actual number of layers
