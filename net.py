@@ -2,6 +2,8 @@ import numpy as np
 import random
 import copy
 import matplotlib.pyplot as plt
+import sys
+import time
 
 class Net():
 
@@ -84,10 +86,17 @@ class Net():
 
         size_data = size_total - size_validation
 
+        alpha = 0.05
+        avg = 0
+        last_duration = 0
         for epoch in range(epochs):
 
-            #print("epoch %d"%(epoch + 1))
+            avg = (1 - alpha) * avg + alpha * last_duration
+            print("\rEpoch %d of %d, estimated %ds left"%(epoch + 1, epochs, int(avg * (epochs - epoch))), end='')
 
+            sys.stdout.flush()
+
+            start_time = time.time()
             for i in range(size_data // size_minibatch):
 
                 minibatch = data_shuffled[i*size_minibatch:(i+1)*size_minibatch]
@@ -117,6 +126,12 @@ class Net():
             cost_avg = cost_total / size_validation
 
             validation_costs.append(cost_avg)
+
+            # timing
+            finish_time = time.time()
+            last_duration = finish_time - start_time
+
+        print('')
 
         return(np.array(validation_costs))
 

@@ -9,7 +9,7 @@ mpl.rcParams['legend.fontsize'] = 10
 
 
 
-layers = [3, 3, 3]
+layers = [3, 3, 2, 3, 3]
 
 net = Net(layers)
 
@@ -20,7 +20,7 @@ z = np.linspace(0.1, 0.9, n)
 x = 0.4 * np.sin(theta) + 0.5
 y = 0.4 * np.cos(theta) + 0.5
 
-data = np.stack([z, x, y])
+data = np.stack([x, y, z])
 training_data = []
 
 for i in range(n):
@@ -28,7 +28,7 @@ for i in range(n):
     training_data.append( (data[:,i], data[:,i]) )
 
 epochs = 10000
-size_minibatch = n // 5
+size_minibatch = 10#n // 5
 size_validation = n // 5
 eta = 0.2
 validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta)
@@ -53,7 +53,7 @@ ax.plot(x, y, z, 'b', label='helix')
 ax.plot(xo, yo, zo, 'g', label='output helix')
 ax.legend()
 
-s = 'architecture = %s, n = %d, epochs = %f, \nsize_minibatch = %d, eta = %f'%\
+s = 'architecture = %s, n = %d, epochs = %d, \nsize_minibatch = %d, eta = %f'%\
 (str(layers), n, epochs, size_minibatch, eta)
 plt.title(s)
 
