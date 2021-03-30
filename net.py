@@ -86,50 +86,66 @@ class Net():
 
         size_data = size_total - size_validation
 
-        alpha = 0.05
+        alpha = 0.1
         avg = 0
         last_duration = 0
-        for epoch in range(epochs):
+        eta_p = eta
+        try:
+            for epoch in range(epochs):
+                time.sleep(0.001)
 
-            avg = (1 - alpha) * avg + alpha * last_duration
-            print("\rEpoch %d of %d, estimated %ds left"%(epoch + 1, epochs, int(avg * (epochs - epoch))), end='')
+                avg = (1 - alpha) * avg + alpha * last_duration
+                overall_sec = int(avg * (epochs - epoch))
+                sec  = overall_sec % 60
+                mins = (overall_sec // 60) % 60
+                hrs  = ((overall_sec // 60) // 60) % 24
+                days = ((overall_sec // 60) // 60) // 24
+                print("\rEpoch %7d of %7d, estimated %3d:%2d:%2d:%2d (ddd:hh:mm:ss) left"%(epoch + 1, epochs, days, hrs,\
+                mins, sec), end='')
 
-            sys.stdout.flush()
+                sys.stdout.flush()
 
-            start_time = time.time()
-            for i in range(size_data // size_minibatch):
+                start_time = time.time()
+                for i in range(size_data // size_minibatch):
 
-                minibatch = data_shuffled[i*size_minibatch:(i+1)*size_minibatch]
+                    minibatch = data_shuffled[i*size_minibatch:(i+1)*size_minibatch]
 
-                self.backpropagation(minibatch, eta)
+                    self.backpropagation(minibatch, eta_p)
 
-            # perform backpropagation for remainding training samples
-            n = size_data // size_minibatch
+                # perform backpropagation for remainding training samples
+                n = size_data // size_minibatch
 
-            remainder_index = n * size_minibatch
+                remainder_index = n * size_minibatch
 
-            if (remainder_index < size_data - 1):
+                if (remainder_index < size_data - 1):
 
-                minibatch = data_shuffled[remainder_index:]
+                    minibatch = data_shuffled[remainder_index:]
 
-                self.backpropagation(minibatch, eta)
+                    self.backpropagation(minibatch, eta_p)
 
-            # validation
-            cost_total = 0
+                # validation
+                cost_total = 0
 
-            for sample_i in range(size_validation):
+                for sample_i in range(size_validation):
 
-                sample = validation_data[sample_i]
+                    sample = validation_data[sample_i]
 
-                cost_total += self.cost(sample[0], sample[1])
+                    cost_total += self.cost(sample[0], sample[1])
 
-            cost_avg = cost_total / size_validation
+                cost_avg = cost_total / size_validation
 
-            validation_costs.append(cost_avg)
+                validation_costs.append(cost_avg)
 
-            # timing
-            finish_time = time.time()
-            last_duration = finish_time - start_time
+                print(", validation_loss = %3.3f"%(cost_avg,), end='')
+                sys.stdout.flush()
+
+                eta_p = eta#* cost_avg * 30
+
+                # timing
+                finish_time = time.time()
+                last_duration = finish_time - start_time
+        except KeyboardInterrupt:
+            pass
 
         print('')
 

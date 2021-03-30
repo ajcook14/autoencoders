@@ -27,7 +27,8 @@ for i in range(n):
 
     training_data.append( (data[:,i], data[:,i]) )
 
-epochs = 10000
+'''
+epochs = 1000
 size_minibatch = 10#n // 5
 size_validation = n // 5
 eta = 0.2
@@ -36,6 +37,7 @@ validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validatio
 validation_epochs = np.arange(epochs, dtype='float64')
 plot = plt.plot(validation_costs)
 plt.show()
+'''
 
 output = np.zeros_like(data)
 
@@ -49,12 +51,14 @@ zo = output[2, :]
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
-ax.plot(x, y, z, 'b', label='helix')
+#ax.plot(x, y, z, 'b', label='helix')
 ax.plot(xo, yo, zo, 'g', label='output helix')
 ax.legend()
 
+'''
 s = 'architecture = %s, n = %d, epochs = %d, \nsize_minibatch = %d, eta = %f'%\
 (str(layers), n, epochs, size_minibatch, eta)
 plt.title(s)
+'''
 
 plt.show()

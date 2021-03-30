@@ -4,16 +4,21 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import pickle
+import gzip
+import time
+
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 layers = [2, 2, 1, 2, 2]
 
 net = Net(layers)
 
-n = 50
+n = 100
 
+# initialize the data
 x = np.arange(0.1, 0.9, 0.8/n)
-y = x - x**2
+y = 1 * (x - x**2)
 
 data = np.stack([x, y])
 
@@ -23,17 +28,21 @@ for i in range(n):
 
     training_data.append( (data[:, i], data[:, i]) )
 
+# train the network
 epochs = 5000
-size_minibatch = n // 5
+size_minibatch = n // 20
 size_validation = n // 5
 eta = 2
 validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta)
 
-validation_epochs = np.arange(epochs, dtype='float64')
-plot = plt.plot(validation_costs)
-plt.show()
+# save the network parameters
+fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
+f = gzip.open(f'./data/quadratic/{fname}', 'wb')
+pickle.dump(net, f)
+f.close()
 
-output = np.zeros_like(data)
+# compute the output manifold
+output = np.zeros((2, n))
 
 for i in range(n):
 
@@ -42,8 +51,12 @@ for i in range(n):
 xo = output[0, :]
 yo = output[1, :]
 
-xx, yy = np.meshgrid(x, y)
-uu, vv = np.meshgrid(x, y)
+# compute vector field
+xi = np.arange(0, 1, 1/n)
+yi = np.arange(0, 1, 1/n)
+
+xx, yy = np.meshgrid(xi, yi)
+uu, vv = np.meshgrid(xi, yi)
 
 for i in range(n):
 
@@ -54,14 +67,19 @@ for i in range(n):
         uu[i, j] = output[0] - xx[i, j]
         vv[i, j] = output[1] - yy[i, j]
 
-fig, ax = plt.subplots()
-ax.scatter(x, y, s=marker_size/4, c='b', label='input')
-ax.scatter(xo, yo, s=marker_size/4, c='g', label='output')
-q = ax.quiver(x, y, uu, vv)
+# plot results
+validation_epochs = np.arange(epochs, dtype='float64')
+
+fig, ax = plt.subplots(1, 2)
+ax[0].plot(validation_costs)
+
+ax[1].scatter(x, y, s=marker_size/4, c='b', label='input')
+ax[1].scatter(xo, yo, s=marker_size/4, c='g', label='output')
+q = ax[1].quiver(xx, yy, uu, vv)
 
 s = 'architecture = %s, n = %d, epochs = %d, \nsize_minibatch = %d, eta = %f'%\
-(str(layers), 2 * n, epochs, size_minibatch, eta)
+(str(layers), n, epochs, size_minibatch, eta)
 plt.title(s)
-ax.legend()
+ax[1].legend()
 
 plt.show()
