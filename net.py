@@ -4,10 +4,11 @@ import copy
 import matplotlib.pyplot as plt
 import sys
 import time
+import os
 
 class Net():
 
-    def __init__(self, layers, parameters=None):
+    def __init__(self, layers, seeds=None, parameters=None):
 
         """
         Here, layers includes the input and output layers.
@@ -22,16 +23,33 @@ class Net():
 
         if parameters is None:
 
+            if seeds is None:
+
+                self.seed = os.urandom(8)
+                self.np_seed = int(time.time() * 10**7)
+
+            else:
+
+                self.seed = seeds[0]
+                self.np_seed = seeds[1]
+
+            rng = np.random.default_rng(self.np_seed)
+
             self.weights = []
             self.biases = []
 
             for i in range(L):
 
-                self.weights.append(np.random.rand(layers[i + 1], layers[i]))
+                self.weights.append( rng.standard_normal((layers[i + 1], layers[i])) )
 
-                self.biases.append(np.random.rand(layers[i + 1]))
+                self.biases.append( rng.standard_normal(layers[i + 1]) )
 
         else:
+
+            assert seeds is None, "Seeds and parameters are provided"
+
+            self.seed = None
+            self.np_seed = None
 
             self.weights = parameters[0]
             self.biases = parameters[1]
@@ -73,6 +91,10 @@ class Net():
         """
 
         size_total = len(training_data)
+
+        if not self.seed is None:
+
+            random.seed(self.seed)
 
         data_shuffled = copy.deepcopy(training_data)
 

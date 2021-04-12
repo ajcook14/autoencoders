@@ -1,4 +1,5 @@
 from net import Net
+from parameters import Parameters
 import numpy as np
 
 import matplotlib as mpl
@@ -38,7 +39,13 @@ validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validatio
 # save the network parameters
 fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
 f = gzip.open(f'./data/quadratic/{fname}', 'wb')
-pickle.dump(net, f)
+
+seeds = (net.seed, net.np_seed)
+parameters = (net.weights, net.biases)
+training_info = ''
+params = Parameters(layers, training_data, epochs, size_minibatch, size_validation, eta, seeds=seeds, parameters=parameters, training_info=training_info)
+
+pickle.dump(params, f)
 f.close()
 
 # compute the output manifold

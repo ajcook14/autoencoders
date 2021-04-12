@@ -1,5 +1,5 @@
-
 from net import Net
+from parameters import Parameters
 import numpy as np
 import gzip
 import pickle
@@ -16,10 +16,11 @@ marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 
 f = gzip.open('./data/concentric/20210330_150744', 'rb')
-net = pickle.load(f)
+params = pickle.load(f)
 f.close()
 
-
+parameters = (params.weights, params.biases)
+net = Net(params.layers, parameters=parameters)
 
 n = 25
 size_validation = (2 * n) // 5

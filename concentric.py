@@ -1,4 +1,5 @@
 from net import Net
+from parameters import Parameters
 import numpy as np
 
 import matplotlib as mpl
@@ -40,7 +41,7 @@ for i in range(2 * n):
     training_data.append( (data[:, i], data[:, i]) )
 
 # train the network
-epochs = 5000
+epochs = 50
 size_minibatch = 1#(2 * n) // 25
 eta = 1
 validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta)
@@ -48,7 +49,13 @@ validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validatio
 # save the network parameters
 fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
 f = gzip.open(f'./data/concentric/{fname}', 'wb')
-pickle.dump(net, f)
+
+seeds = (net.seed, net.np_seed)
+parameters = (net.weights, net.biases)
+training_info = ''
+params = Parameters(layers, training_data, epochs, size_minibatch, size_validation, eta, seeds=seeds, parameters=parameters, training_info=training_info)
+
+pickle.dump(params, f)
 f.close()
 
 # compute output manifold
@@ -80,7 +87,7 @@ for i in range(m):
         vv[i, j] = output[1] - yy[i, j]
 
 # compute encoder output
-encoder = Net( layers[:3], (net.weights[:2], net.biases[:2]) )
+encoder = Net( layers[:3], parameters=(net.weights[:2], net.biases[:2]) )
 zz = np.zeros((m, m))
 
 for i in range(m):
