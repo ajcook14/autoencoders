@@ -1,3 +1,6 @@
+from pyibex import *
+from tubex_lib import *
+
 import numpy as np
 import random
 import copy
@@ -54,10 +57,29 @@ class Net():
             self.weights = parameters[0]
             self.biases = parameters[1]
 
+        self.sigmoid_interval = lambda z: 1/(1 + exp(-z))
+
+        self.vsigmoid_interval = np.vectorize(self.sigmoid_interval)
 
     def sigmoid(self, z):
 
-        return( 1/(1 + np.e**(-z)) )
+        if isinstance(z, np.ndarray):
+
+            if isinstance(z.flat[0], pyibex.pyibex.Interval):
+
+                return( self.vsigmoid_interval(z) )
+
+            else: # assume numpy can handle it
+
+                return( 1/(1 + np.exp(-z)) )
+
+        elif isinstance(z, pyibex.pyibex.Interval):
+
+            return( self.sigmoid_interval(z) )
+
+        else:
+
+            return( 1/(1 + np.exp(-z)) )
 
     def d_sigmoid(self, z):
 

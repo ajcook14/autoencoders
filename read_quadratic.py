@@ -11,6 +11,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
+from interval_bisection import *
+
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 
@@ -58,9 +60,28 @@ for i in range(m):
         uu[i, j] = output[0] - xx[i, j]
         vv[i, j] = output[1] - yy[i, j]
 
-# plot results
-fig, ax = plt.subplots()
+# interval bisection
+def f(x):
 
+    return(net.feedforward(x) - x)
+
+u = Interval(0, 1)
+v = Interval(0, 1)
+init = np.array([u, v])
+tol = 0.001
+queue = Queue()
+queue.append(init)
+
+result = interval_bisection(f, queue, tol)
+
+fig, ax = plt.subplots(figsize=(24, 12))
+
+#ax.set_xlim([0, 1])
+#ax.set_ylim([0, 1])
+
+rectangles(ax, result)
+
+# plot results
 ax.scatter(x, y, s=marker_size/4, c='b', label='input')
 ax.scatter(xo, yo, s=marker_size/4, c='g', label='output')
 q = ax.quiver(xx, yy, uu, vv)
@@ -95,5 +116,4 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.show()
-
+plt.savefig('./figures/quadratic/08/tol=%f.png'%tol)
