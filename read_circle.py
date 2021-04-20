@@ -12,13 +12,12 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 from interval_bisection import *
-from queue import Queue
 
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 
 
-f = gzip.open('./data/concentric/20210330_150744', 'rb')
+f = gzip.open('./data/circle/20210414_115426', 'rb')
 params = pickle.load(f)
 f.close()
 
@@ -26,24 +25,19 @@ parameters = (params.weights, params.biases)
 net = Net(params.layers, parameters=parameters)
 
 n = 25
-size_validation = (2 * n) // 5
+size_validation = n // 5
 
 # initialize the data
 theta = np.linspace(-np.pi, np.pi, n + size_validation)
-x_out = 0.4 * np.cos(theta) + 0.5
-y_out = 0.4 * np.sin(theta) + 0.5
+data_x = 0.4 * np.cos(theta) + 0.5
+data_y = 0.4 * np.sin(theta) + 0.5
 
-x_in = 0.2 * np.cos(theta) + 0.5
-y_in = 0.2 * np.sin(theta) + 0.5
-
-data_x = np.hstack([x_out, x_in])
-data_y = np.hstack([y_out, y_in])
 data = np.stack([data_x, data_y])
 
 # compute output manifold
-output = np.zeros((2, 2 * n))
+output = np.zeros((2, n))
 
-for i in range(2 * n):
+for i in range(n):
 
     output[:, i] = net.feedforward( data[:, i] )
 
@@ -91,7 +85,7 @@ def f(x):
 u = Interval(0, 1)
 v = Interval(0, 1)
 init = np.array([u, v])
-tol = 0.1
+tol = 0.1/16
 queue = Queue()
 queue.append(init)
 
@@ -139,7 +133,7 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.savefig('./figures/concentric/19/tol=%f.png'%tol)
+plt.savefig('./figures/circle/tol=%f.png'%tol)
 
 """
 # plot the encoder

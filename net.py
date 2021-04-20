@@ -268,5 +268,39 @@ class Net():
             self.weights[layer] = self.weights[layer] - eta * weights_avg[layer]
             self.biases[layer] = self.biases[layer] - eta * biases_avg[layer]
 
+    def jacobian(self, x):
 
+        L = len(self.layers) - 1  # actual number of layers
+
+        # forward propagation
+
+        a = x   # note this approach is different to that used in the training algorithm, since here
+                # we can avoid a special case for the last layer in the backpropagation (first layer)
+        z = []
+
+        for j in range(L):
+
+            z.append(np.dot(self.weights[j], a) + self.biases[j])
+
+            a = self.sigmoid(z[-1])
+
+        # back propagation
+
+        dy_da = [None] * L
+
+        dy_dz = self.d_sigmoid(z[L - 1])
+        dy_dz = dy_dz.reshape((self.layers[L], 1))
+
+        dy_da[L - 1] = dy_dz * self.weights[L - 1]
+
+        for l in range(L - 2, -1, -1):
+
+            da_dz = self.d_sigmoid(z[l])
+            da_dz = da_dz.reshape((self.layers[l + 1], 1))
+
+            da_da = da_dz * self.weights[l]
+
+            dy_da[l] = np.dot( dy_da[l + 1], da_da )
+
+        return(dy_da[0])
 

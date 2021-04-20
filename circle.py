@@ -15,7 +15,7 @@ import time
 
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
-layers = [2, 10, 2]#[2, 3, 3, 1, 2]
+layers = [2, 1, 2]#[2, 3, 3, 1, 2]
 
 net = Net(layers)
 
