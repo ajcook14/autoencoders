@@ -1,5 +1,6 @@
 __pycache__/
 next_commit
 data/
+data_old/
 figures/
 *.swp

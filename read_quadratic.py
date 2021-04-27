@@ -3,6 +3,7 @@ from parameters import Parameters
 import numpy as np
 import gzip
 import pickle
+import argparse
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -17,22 +18,41 @@ from diffae import DiffAE
 
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
+parser = argparse.ArgumentParser()
+parser.add_argument('file_name', metavar='YYYYMMDD_HHMMSS', type=str, nargs='+',
+                    help='file name of the pickled parameters object')
 
+args = parser.parse_args()
 
-f = gzip.open('./data/quadratic/20210330_232952', 'rb')
+file_name = args.file_name[0]
+f = gzip.open(f'./data/quadratic/{file_name}', 'rb')
 params = pickle.load(f)
 f.close()
 
 parameters = (params.weights, params.biases)
 net = Net(params.layers, parameters=parameters)
 
-n = 100
-
 # initialize the data
-x = np.arange(0.1, 0.9, 0.8/n)
-y = 1 * (x - x**2)
+if isinstance(params.training_data, list):
 
-data = np.stack([x, y])
+    n = len(params.training_data)
+
+    data = np.zeros((2, n))
+
+    for i in range(len(params.training_data)):
+
+        point = params.training_data[i]
+
+        data[:, i] = point[0]
+
+else:
+
+    n = 100
+
+    x = np.arange(0.1, 0.9, 0.8/n)
+    y = 1 * (x - x**2)
+
+    data = np.stack([x, y])
 
 # compute output manifold
 output = np.zeros((2, n))
@@ -73,9 +93,7 @@ queue.append(init)
 
 verified = interval_bisection(f, queue)
 
-print('number of verified intervals = %d'%len(verified))
-
-fig, ax = plt.subplots(figsize=(24, 12))
+fig, ax = plt.subplots(figsize=(12, 6))
 
 #ax.set_xlim([0, 1])
 #ax.set_ylim([0, 1])
@@ -83,11 +101,14 @@ fig, ax = plt.subplots(figsize=(24, 12))
 rectangles(ax, verified)
 
 # plot results
+x = data[0,:]
+y = data[1,:]
 ax.scatter(x, y, s=marker_size/4, c='b', label='input')
 ax.scatter(xo, yo, s=marker_size/4, c='g', label='output')
 q = ax.quiver(xx, yy, uu, vv)
 
 ax.legend()
+plt.title('number of verified intervals = %d'%len(verified))
 
 # a very simple ode solver using Euler's method
 def onclick(event):
@@ -117,5 +138,5 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.show()
-#plt.savefig('./figures/quadratic/08/tol=%f.png'%tol)
+#plt.show()
+plt.savefig(f'./figures/quadratic/{file_name}_newton.png')

@@ -8,45 +8,114 @@ import matplotlib.pyplot as plt
 import pickle
 import gzip
 import time
+import argparse
 
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
-layers = [2, 2, 1, 2, 2]
 
-net = Net(layers)
+parser = argparse.ArgumentParser()
+parser.add_argument('--f', metavar='YYYYMMDD_HHMMSS', required=False, type=str, nargs='+',
+                    help='file name of the pickled parameters object')
+parser.add_argument('--s', metavar='save', required=False, type=bool, nargs='*',
+                    help='save the trained network in a parameters object')
 
-n = 100
+args = parser.parse_args()
+
+# initialize the autoencoder
+if args.f is None:
+
+    layers = [2, 2, 1, 2, 2]
+
+    net = Net(layers)
+
+else:
+
+    file_name = args.f[0]
+
+    f = gzip.open(f'./data/quadratic/{file_name}', 'rb')
+    params = pickle.load(f)
+    f.close()
+
+    seeds = (params.seed, params.np_seed)
+
+    layers = params.layers
+    net = Net(layers, seeds=seeds)
 
 # initialize the data
-x = np.arange(0.1, 0.9, 0.8/n)
-y = 1 * (x - x**2)
 
-data = np.stack([x, y])
+if args.f is None or not isinstance(params.training_data, list):
 
-training_data = []
+    n = 100
 
-for i in range(n):
+    a = 0.1
+    b = 0.9
+    x = np.arange(a, b, (b - a)/n)
+    y = 1 * (x - x**2)
 
-    training_data.append( (data[:, i], data[:, i]) )
+    data = np.stack([x, y])
+
+    training_data = []
+
+    for i in range(n):
+
+        training_data.append( (data[:, i], data[:, i]) )
+
+else:
+
+    n = len(params.training_data)
+
+    data = np.zeros((2, n))
+
+    for i in range(len(params.training_data)):
+
+        point = params.training_data[i]
+
+        data[:, i] = point[0]
+
+    training_data = params.training_data
 
 # train the network
-epochs = 5000
-size_minibatch = n // 20
-size_validation = n // 5
-eta = 2
+if args.f is None:
+
+    epochs = 2000
+    size_minibatch = n // 20
+    size_validation = n // 5
+    eta = 2
+
+else:
+
+    epochs = params.epochs
+    size_minibatch = params.size_minibatch
+    size_validation = params.size_validation
+    eta = params.eta
+
+epochs = 900
+
 validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta)
 
 # save the network parameters
-fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
-f = gzip.open(f'./data/quadratic/{fname}', 'wb')
+if not args.s is None:
 
-seeds = (net.seed, net.np_seed)
-parameters = (net.weights, net.biases)
-training_info = ''
-params = Parameters(layers, training_data, epochs, size_minibatch, size_validation, eta, seeds=seeds, parameters=parameters, training_info=training_info)
+    if args.f is None:
 
-pickle.dump(params, f)
-f.close()
+        fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
+        f = gzip.open(f'./data/quadratic/{fname}', 'wb')
+
+    else:
+
+        fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
+        fname = f'{file_name}_{fname}'
+        f = gzip.open(f'./data/quadratic/{fname}', 'wb')
+
+    seeds = (net.seed, net.np_seed)
+    parameters = (net.weights, net.biases)
+    training_info = ''
+    params = Parameters(layers, training_data, epochs, size_minibatch, size_validation, eta, seeds=seeds, parameters=parameters, training_info=training_info)
+
+    pickle.dump(params, f)
+    f.close()
+
+    print(f'saved to file {fname}')
 
 # compute the output manifold
 output = np.zeros((2, n))
@@ -77,9 +146,11 @@ for i in range(n):
 # plot results
 validation_epochs = np.arange(epochs, dtype='float64')
 
-fig, ax = plt.subplots(1, 2)
+fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 ax[0].plot(validation_costs)
 
+x = data[0,:]
+y = data[1,:]
 ax[1].scatter(x, y, s=marker_size/4, c='b', label='input')
 ax[1].scatter(xo, yo, s=marker_size/4, c='g', label='output')
 q = ax[1].quiver(xx, yy, uu, vv)
