@@ -12,12 +12,14 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 
 from interval_bisection import *
+from queue import Queue
+from diffae import DiffAE
 
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 
 
-f = gzip.open('./data/circle/20210414_115426', 'rb')
+f = gzip.open('./data/circle/20210413_223425', 'rb') #20210414_115426', 'rb')
 params = pickle.load(f)
 f.close()
 
@@ -77,26 +79,25 @@ for i in range(m):
         zz[i, j] = output[0]
 """
 
-# interval bisection
-def f(x):
-
-    return(net.feedforward(x) - x)
+# interval bisection and newton
+f = DiffAE(net)
 
 u = Interval(0, 1)
 v = Interval(0, 1)
 init = np.array([u, v])
-tol = 0.1/16
 queue = Queue()
 queue.append(init)
 
-result = interval_bisection(f, queue, tol)
+verified = interval_bisection(f, queue)
+
+print('number of verified intervals = %d'%len(verified))
 
 fig, ax = plt.subplots(figsize=(24, 24))
 
 #ax.set_xlim([0, 1])
 #ax.set_ylim([0, 1])
 
-rectangles(ax, result)
+rectangles(ax, verified)
 
 # plot results
 ax.scatter(data_x, data_y, s=marker_size/4, c='b', label='input')
@@ -133,7 +134,8 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.savefig('./figures/circle/tol=%f.png'%tol)
+plt.show()
+#plt.savefig('./figures/circle/tol=%f.png'%tol)
 
 """
 # plot the encoder

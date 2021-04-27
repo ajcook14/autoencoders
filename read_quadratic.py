@@ -15,8 +15,6 @@ from interval_bisection import *
 from queue import Queue
 from diffae import DiffAE
 
-from newton import newton
-
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 
@@ -70,28 +68,12 @@ f = DiffAE(net)
 u = Interval(0, 1)
 v = Interval(0, 1)
 init = np.array([u, v])
-tol = 0.0005
 queue = Queue()
 queue.append(init)
 
-result = interval_bisection(f, queue, tol)
+verified = interval_bisection(f, queue)
 
-verified = []
-for i in range(len(result)):
-
-    interval = result[i]
-
-    out = newton(f, interval)
-
-    if isinstance(out, np.ndarray):
-
-        verified.append(out)
-
-    elif out == -1:
-
-        print(-1)
-
-print('# of verified intervals = %d'%len(verified))
+print('number of verified intervals = %d'%len(verified))
 
 fig, ax = plt.subplots(figsize=(24, 12))
 
@@ -135,4 +117,5 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.savefig('./figures/quadratic/08/tol=%f.png'%tol)
+plt.show()
+#plt.savefig('./figures/quadratic/08/tol=%f.png'%tol)
