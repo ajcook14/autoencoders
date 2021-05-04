@@ -45,11 +45,15 @@ else:
 
 if args.f is None or not isinstance(params.training_data, list):
 
-    n = 100
+    k = 4 # number of segments
+    m = 100 // k # points per segment
+    n = k * m
 
     a = 0.1
     b = 0.9
-    x = np.arange(a, b, (b - a)/n)
+    space = (b - a)/(2 * k - 1)
+
+    x = np.hstack([np.arange(a + (2 * i) * space, a + (2 * i + 1) * space, (b - a)/(2 * k - 1)/m) for i in range(k)])
     y = 1 * (x - x**2)
 
     data = np.stack([x, y])
@@ -77,7 +81,7 @@ else:
 # train the network
 if args.f is None:
 
-    epochs = 2000
+    epochs = 200
     size_minibatch = n // 20
     size_validation = n // 5
     eta = 2
@@ -88,8 +92,6 @@ else:
     size_minibatch = params.size_minibatch
     size_validation = params.size_validation
     eta = params.eta
-
-epochs = 900
 
 validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta)
 

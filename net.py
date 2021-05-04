@@ -43,9 +43,9 @@ class Net():
 
             for i in range(L):
 
-                self.weights.append( rng.standard_normal((layers[i + 1], layers[i])) )
+                self.weights.append( rng.normal(loc=0.0, scale=1.0, size=(layers[i + 1], layers[i])) )
 
-                self.biases.append( rng.standard_normal(layers[i + 1]) )
+                self.biases.append( rng.normal(loc=0.0, scale=1.0, size=layers[i + 1]) )
 
         else:
 
@@ -83,7 +83,9 @@ class Net():
 
     def d_sigmoid(self, z):
 
-        return( self.sigmoid(z) * (1 - self.sigmoid(z)) )
+        sig = self.sigmoid(z)
+
+        return( sig * (1 - sig) )
 
     def feedforward(self, x):
 
@@ -136,7 +138,7 @@ class Net():
         eta_p = eta
         try:
             for epoch in range(epochs):
-                time.sleep(0.001)
+                #time.sleep(0.001)
 
                 avg = (1 - alpha) * avg + alpha * last_duration
                 overall_sec = int(avg * (epochs - epoch))
