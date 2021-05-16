@@ -30,3 +30,6 @@ class Queue():
 
         return(item)
 
+    def clean(self):
+
+        self.queue = []

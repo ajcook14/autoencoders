@@ -19,6 +19,16 @@ intersection = np.vectorize(lambda x, y: x & y)
 
 def inverse(m): # m is a 2 x 2 matrix possibly of intervals
 
+    if m.shape == (1, 1):
+
+        inverse = 1 / m
+
+        if inverse[0,0].contains(0):
+
+            raise ZeroDivisionError
+
+        return(inverse)
+
     a = m[0, 0]
     b = m[0, 1]
     c = m[1, 0]
