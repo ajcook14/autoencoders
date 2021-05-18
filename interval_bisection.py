@@ -114,6 +114,12 @@ def interval_bisection(f, queue):
 
             split = divide(interval)
 
+            for half in split:
+
+                for element in list(half):
+
+                    element.inflate(1e-17)
+
             queue.append(split[0])
             queue.append(split[1])
 

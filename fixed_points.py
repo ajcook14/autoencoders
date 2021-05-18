@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 
 
-layers = [1, 1, 1, 1]
+layers = [1, 1, 1]
 
 L = len(layers) - 1
 
@@ -28,6 +28,10 @@ parameters = (weights, biases)
 
 net = Net(layers, parameters=parameters)
 
+weights_lower = -100.0
+weights_upper = 100.0
+biases_lower = -100.0
+biases_upper = 100.0
 seed = 0
 rng = np.random.default_rng(seed)
 init = np.array([Interval(0, 1) for _ in range(layers[0])])
@@ -44,7 +48,8 @@ try:
 
         for i in range(L):
 
-            weights[i] = rng.uniform(-10.0, 10.0, (layers[i + 1], layers[i]))
+            weights[i] = rng.uniform(weights_lower, weights_upper, (layers[i + 1], layers[i]))
+            biases[i] = rng.uniform(biases_lower, biases_upper, layers[i + 1]) # remove this line for zero biases
 
         f = DiffAE(net)
 
@@ -60,16 +65,21 @@ try:
 
 except KeyboardInterrupt:
 
-    print('')
-
     pass
+
+print('')
 
 fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
 f = gzip.open(f'./data/fixed_points/{fname}', 'wb')
 
-pickle.dump((fixed_points, layers, seed), f)
+limits = (weights_lower, weights_upper, biases_lower, biases_upper)
+# if no limits, assume weights_lower=-20.0, weights_upper=20.0, 
+# biases_lower=-10.0, biases_upper=10.0
+pickle.dump((fixed_points, layers, seed, limits), f)
 
 f.close()
+
+print(f'saved to file {fname}')
 
 npfixed = np.array(fixed_points)
 
