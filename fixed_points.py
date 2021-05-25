@@ -11,83 +11,118 @@ import sys
 import matplotlib.pyplot as plt
 
 
+def check_fixed_points(layers,
+    weights_lower=-100.0,
+    weights_upper=100.0,
+    biases_lower=-100.0,
+    biases_upper=100.0,
+    seed=0,
+    samples=300000):
 
-layers = [1, 1, 1]
+    L = len(layers) - 1
 
-L = len(layers) - 1
+    weights = []
+    biases = []
 
-weights = []
-biases = []
+    for i in range(L):
 
-for i in range(L):
+        weights.append( np.zeros((layers[i + 1], layers[i])) )
+        biases.append( np.zeros(layers[i + 1]) )
 
-    weights.append( np.zeros((layers[i + 1], layers[i])) )
-    biases.append( np.zeros(layers[i + 1]) )
+    parameters = (weights, biases)
 
-parameters = (weights, biases)
+    net = Net(layers, parameters=parameters)
 
-net = Net(layers, parameters=parameters)
+    rng = np.random.default_rng(seed)
+    init = np.array([Interval(0, 1) for _ in range(layers[0])])
+    queue = Queue()
+    fixed_points = []
 
-weights_lower = -100.0
-weights_upper = 100.0
-biases_lower = -100.0
-biases_upper = 100.0
-seed = 0
-rng = np.random.default_rng(seed)
-init = np.array([Interval(0, 1) for _ in range(layers[0])])
-queue = Queue()
-fixed_points = []
-iteration = 0
+    try:
 
-try:
+        for iteration in range(samples):
 
-    while True:
+            print(f'\r{iteration} of {samples}', end='')
+            sys.stdout.flush()
 
-        print(f'\r{iteration}', end='')
-        sys.stdout.flush()
+            for i in range(L):
 
-        for i in range(L):
+                weights[i] = rng.uniform(weights_lower, weights_upper, (layers[i + 1], layers[i]))
+                biases[i] = rng.uniform(biases_lower, biases_upper, layers[i + 1]) # remove this line for zero biases
 
-            weights[i] = rng.uniform(weights_lower, weights_upper, (layers[i + 1], layers[i]))
-            biases[i] = rng.uniform(biases_lower, biases_upper, layers[i + 1]) # remove this line for zero biases
+            f = DiffAE(net)
 
-        f = DiffAE(net)
+            queue.clean()
+            queue.append(init)
 
-        queue.clean()
-        queue.append(init)
+            verified = interval_bisection(f, queue)
 
-        verified = interval_bisection(f, queue)
+            if verified == -1:
 
-        fixed_points.append(len(verified))
+                print('')
+                print(f'iteration {iteration} unverified')
 
-        iteration += 1
+                fixed_points.append(-1)
+
+            else:
+
+                fixed_points.append(len(verified))
+
+    except KeyboardInterrupt:
+
+        print('')
+
+        return(-1)
 
 
-except KeyboardInterrupt:
+    fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
+    fname += '_' + '-'.join(map(lambda x: str(x), layers))
+    f = gzip.open(f'./data/fixed_points/layers/{fname}', 'wb')
 
-    pass
+    print(f'len(fixed_points) = {len(fixed_points)}')
 
-print('')
+    limits = (weights_lower, weights_upper, biases_lower, biases_upper)
+    # if no limits, assume weights_lower=-20.0, weights_upper=20.0, 
+    # biases_lower=-10.0, biases_upper=10.0
+    pickle.dump((fixed_points, layers, seed, limits), f)
 
-fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
-f = gzip.open(f'./data/fixed_points/{fname}', 'wb')
+    f.close()
 
-limits = (weights_lower, weights_upper, biases_lower, biases_upper)
-# if no limits, assume weights_lower=-20.0, weights_upper=20.0, 
-# biases_lower=-10.0, biases_upper=10.0
-pickle.dump((fixed_points, layers, seed, limits), f)
+    print(f'saved to file {fname}')
 
-f.close()
+    return(0)
 
-print(f'saved to file {fname}')
 
-npfixed = np.array(fixed_points)
 
-print(f'min = {npfixed.min()}')
-print(f'max = {npfixed.max()}')
-print(f'mean = {npfixed.mean()}')
-print(f'std = {npfixed.std()}')
-print(f'lenfp = {len(fixed_points)}')
+def main():
+
+    hidden = 3
+
+    try:
+
+        while True:
+
+            layers = [1, hidden, 1]
+
+            if check_fixed_points(layers,
+                weights_lower=-1000.0,
+                weights_upper=1000.0,
+                biases_lower=-1000.0,
+                biases_upper=1000.0,
+                seed=0,
+                samples=300000) < 0:
+
+                break
+
+            hidden += 1
+
+        return(0)
+
+    except KeyboardInterrupt:
+
+        print('Interrupted outside main loop!')
+
+        return(-1)
 
 """
 print(net.weights)
@@ -104,3 +139,8 @@ ax.plot(x, y)
 
 plt.show()
 """
+
+if __name__ == '__main__':
+
+    main()
+

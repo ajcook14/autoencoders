@@ -4,6 +4,7 @@ from tubex_lib import *
 from net import Net
 import numpy as np
 import copy
+import time
 
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
@@ -81,7 +82,12 @@ def interval_bisection(f, queue):
 
     verified = []
 
+    begin = time.time()
+
     while not queue.is_empty():
+
+        if time.time() - begin > 5:
+            return(-1)
 
         interval = queue.serve()
 
