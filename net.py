@@ -9,9 +9,13 @@ import sys
 import time
 import os
 
+import activations
+
+
+
 class Net():
 
-    def __init__(self, layers, seeds=None, parameters=None):
+    def __init__(self, layers, seeds=None, parameters=None, activation=activations.sigmoid):
 
         """
         Here, layers includes the input and output layers.
@@ -61,6 +65,18 @@ class Net():
 
         self.vsigmoid_interval = np.vectorize(self.sigmoid_interval)
 
+        self.relu_interval = lambda x: max(Interval(0), x)
+
+        self.vrelu_interval = np.vectorize(self.relu_interval)
+
+        if activation == activations.sigmoid:
+
+            self.activation = self.sigmoid
+
+        elif activation == activations.relu:
+
+            self.activation = self.relu
+
     def sigmoid(self, z):
 
         if isinstance(z, np.ndarray):
@@ -87,11 +103,27 @@ class Net():
 
         return( sig * (1 - sig) )
 
+    def relu(self, x):
+
+        if isinstance(x, np.ndarray):
+
+            if isinstance(x.flat[0], pyibex.pyibex.Interval):
+
+                return( self.vrelu_interval(x) )
+
+            else: # assume numpy can handle it
+
+                reshaped = x.reshape(-1)
+
+                first = np.zeros(reshaped.shape[0])
+
+                return( np.max(np.stack([first, reshaped]), 0) )
+
     def feedforward(self, x):
 
         for i in range(len(self.layers) - 1):
 
-            x = self.sigmoid(np.dot(self.weights[i], x) + self.biases[i])
+            x = self.activation(np.dot(self.weights[i], x) + self.biases[i])
 
         return(x)
 
@@ -138,9 +170,15 @@ class Net():
         eta_p = eta
         try:
             for epoch in range(epochs):
-                #time.sleep(0.001)
 
-                avg = (1 - alpha) * avg + alpha * last_duration
+                if epoch == 1:
+
+                    avg = last_duration
+
+                else:
+
+                    avg = (1 - alpha) * avg + alpha * last_duration
+
                 overall_sec = int(avg * (epochs - epoch))
                 sec  = overall_sec % 60
                 mins = (overall_sec // 60) % 60
@@ -185,7 +223,7 @@ class Net():
                 print(", validation_loss = %3.3f"%(cost_avg,), end='')
                 sys.stdout.flush()
 
-                eta_p = eta#* cost_avg * 30
+                eta_p = eta#* cost_avg / 70
 
                 # timing
                 finish_time = time.time()

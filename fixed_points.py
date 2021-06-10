@@ -2,6 +2,7 @@ from net import Net
 from interval_bisection import *
 from queue import Queue
 from diffae import DiffAE
+import activations
 
 import numpy as np
 import time
@@ -31,7 +32,8 @@ def check_fixed_points(layers,
 
     parameters = (weights, biases)
 
-    net = Net(layers, parameters=parameters)
+    activation = activations.relu
+    net = Net(layers, parameters=parameters, activation=activation)
 
     rng = np.random.default_rng(seed)
     init = np.array([Interval(0, 1) for _ in range(layers[0])])
@@ -77,14 +79,24 @@ def check_fixed_points(layers,
 
     fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
     fname += '_' + '-'.join(map(lambda x: str(x), layers))
-    f = gzip.open(f'./data/fixed_points/layers/{fname}', 'wb')
+    
+    if activation == activations.sigmoid:
+
+        aname = 'sigmoid'
+
+    elif activation == activations.relu:
+
+
+        aname = 'relu'
+
+    f = gzip.open(f'./data/fixed_points/layers/{aname}/{fname}', 'wb')
 
     print(f'len(fixed_points) = {len(fixed_points)}')
 
     limits = (weights_lower, weights_upper, biases_lower, biases_upper)
     # if no limits, assume weights_lower=-20.0, weights_upper=20.0, 
     # biases_lower=-10.0, biases_upper=10.0
-    pickle.dump((fixed_points, layers, seed, limits), f)
+    pickle.dump((fixed_points, layers, seed, limits, activation), f)
 
     f.close()
 
@@ -96,20 +108,20 @@ def check_fixed_points(layers,
 
 def main():
 
-    hidden = 3
+    hidden = 2
 
     try:
 
-        while True:
+        while hidden == 2:
 
             layers = [1, hidden, 1]
 
             if check_fixed_points(layers,
-                weights_lower=-1000.0,
-                weights_upper=1000.0,
-                biases_lower=-1000.0,
-                biases_upper=1000.0,
-                seed=0,
+                weights_lower=-10.0,
+                weights_upper=10.0,
+                biases_lower=-1.0,
+                biases_upper=1.0,
+                seed=0,#0,
                 samples=300000) < 0:
 
                 break

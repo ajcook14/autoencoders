@@ -18,7 +18,7 @@ class Parameters():
 
         if seeds is None:
 
-            assert not parameters is None, "Neither seeds not parameters are provided"
+            assert not parameters is None, "Neither seeds nor parameters are provided"
 
         else:
 

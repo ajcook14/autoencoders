@@ -8,7 +8,7 @@ args = parser.parse_args()
 layers = args.n
 
 
-ls = os.listdir('./data/fixed_points/layers/')
+ls = os.listdir('./data/fixed_points/layers/relu/')
 
 ls_split = list(map(lambda x: x.split('_'), ls))
 
@@ -26,9 +26,9 @@ for i in range(len(ls_split)):
 
 print(fname)
 
-f = gzip.open(f'./data/fixed_points/layers/{fname}', 'rb')
+f = gzip.open(f'./data/fixed_points/layers/relu/{fname}', 'rb')
 
-fixed_points, layers, seed, limits = pickle.load(f)
+fixed_points, layers, seed, limits, activation = pickle.load(f)
 
 f.close()
 

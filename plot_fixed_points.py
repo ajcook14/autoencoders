@@ -4,6 +4,8 @@ import matplotlib as mpl
 
 import gzip, pickle, argparse
 
+import activations
+
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 parser = argparse.ArgumentParser()
@@ -24,9 +26,17 @@ if len(tup) == 3:
 
     limits = (-20.0, 20.0, -10.0, 10.0)
 
+    activation = activations.sigmoid
+
 elif len(tup) == 4:
 
     fixed_points, layers, seed, limits = tup
+
+    activation = activations.sigmoid
+
+elif len(tup) == 5:
+
+    fixed_points, layers, seed, limits, activation = tup
 
 else:
 

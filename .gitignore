@@ -4,3 +4,5 @@ data/
 data_old/
 figures/
 *.swp
+experiments/outputs/
+*.pyc
