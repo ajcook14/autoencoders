@@ -69,13 +69,36 @@ class Net():
 
         self.vrelu_interval = np.vectorize(self.relu_interval)
 
+        self.vd_relu_interval = np.vectorize(self.d_relu_interval)
+
         if activation == activations.sigmoid:
 
             self.activation = self.sigmoid
 
+            self.d_activation = self.d_sigmoid
+
         elif activation == activations.relu:
 
             self.activation = self.relu
+
+            self.d_activation = self.d_relu
+
+    def d_relu_interval(self, x):
+
+        """x: pyibex interval
+        """
+
+        if x.ub() < 0.:
+
+            return(Interval(0))
+
+        elif x.lb() > 0.:
+
+            return(Interval(1))
+
+        else:
+
+            return(Interval(0, 1))
 
     def sigmoid(self, z):
 
@@ -118,6 +141,19 @@ class Net():
                 first = np.zeros(reshaped.shape[0])
 
                 return( np.max(np.stack([first, reshaped]), 0) )
+
+    def d_relu(self, x):
+
+        if isinstance(x, np.ndarray):
+
+            if isinstance(x.flat[0], pyibex.pyibex.Interval):
+
+                return( self.vd_relu_interval(x) )
+
+            else: # assume numpy can handle it
+
+                return( np.heaviside(x, 0.) )
+
 
     def feedforward(self, x):
 
@@ -261,13 +297,13 @@ class Net():
             # forward propagation
             z = [np.dot(self.weights[0], x) + self.biases[0]]
 
-            a = [self.sigmoid(z[0])]
+            a = [self.activation(z[0])]
 
             for j in range(L - 1):  # L - 1 because we have already evaluated the first layer
 
                 z.append(np.dot(self.weights[j + 1], a[-1]) + self.biases[j + 1])
 
-                a.append(self.sigmoid(z[-1]))
+                a.append(self.activation(z[-1]))
 
             # back propagation
             dC_da = [None] * L  # will be derivatives with respect
@@ -275,27 +311,27 @@ class Net():
                                 # specific training data point
             dC_da[L - 1] = 2 * (a[L - 1] - y)
 
-            dC_dz = (dC_da[L - 1] * self.d_sigmoid(z[L - 1])).reshape((1, self.layers[L])).T
+            dC_dz = (dC_da[L - 1] * self.d_activation(z[L - 1])).reshape((1, self.layers[L])).T
 
             weights_avg[L - 1] += np.dot( dC_dz, a[L - 2].reshape((1, self.layers[L - 1])) )
-            biases_avg[L - 1] += dC_da[L - 1] * self.d_sigmoid(z[L - 1])
+            biases_avg[L - 1] += dC_da[L - 1] * self.d_activation(z[L - 1])
 
             for l in range(L - 2, 0, -1):  # L - 2: one for indexing from 0, one for taking above into account
 
-                dC_da[l] = np.dot((dC_da[l + 1] * self.d_sigmoid(z[l + 1])).flatten(), self.weights[l + 1])
+                dC_da[l] = np.dot((dC_da[l + 1] * self.d_activation(z[l + 1])).flatten(), self.weights[l + 1])
                 
-                dC_dz = (dC_da[l] * self.d_sigmoid(z[l])).reshape((1, self.layers[l + 1])).T
+                dC_dz = (dC_da[l] * self.d_activation(z[l])).reshape((1, self.layers[l + 1])).T
 
                 weights_avg[l] += np.dot( dC_dz, a[l - 1].reshape((1, self.layers[l])) )
-                biases_avg[l] += dC_da[l] * self.d_sigmoid(z[l])
+                biases_avg[l] += dC_da[l] * self.d_activation(z[l])
 
             # because of a[] starting at layer 1, this is a special case
-            dC_da[0] = np.dot((dC_da[1] * self.d_sigmoid(z[1])).flatten(), self.weights[1])
+            dC_da[0] = np.dot((dC_da[1] * self.d_activation(z[1])).flatten(), self.weights[1])
             
-            dC_dz = (dC_da[0] * self.d_sigmoid(z[0])).reshape((1, self.layers[1])).T
+            dC_dz = (dC_da[0] * self.d_activation(z[0])).reshape((1, self.layers[1])).T
 
             weights_avg[0] += np.dot( dC_dz, x.reshape((1, self.layers[0])) )
-            biases_avg[0] += dC_da[0] * self.d_sigmoid(z[0])
+            biases_avg[0] += dC_da[0] * self.d_activation(z[0])
 
         assert len(weights_avg) == len(biases_avg) == L, "weights_avg and biases_avg have different lengths"
 
@@ -322,20 +358,20 @@ class Net():
 
             z.append(np.dot(self.weights[j], a) + self.biases[j])
 
-            a = self.sigmoid(z[-1])
+            a = self.activation(z[-1])
 
         # back propagation
 
         dy_da = [None] * L
 
-        dy_dz = self.d_sigmoid(z[L - 1])
+        dy_dz = self.d_activation(z[L - 1])
         dy_dz = dy_dz.reshape((self.layers[L], 1))
 
         dy_da[L - 1] = dy_dz * self.weights[L - 1]
 
         for l in range(L - 2, -1, -1):
 
-            da_dz = self.d_sigmoid(z[l])
+            da_dz = self.d_activation(z[l])
             da_dz = da_dz.reshape((self.layers[l + 1], 1))
 
             da_da = da_dz * self.weights[l]

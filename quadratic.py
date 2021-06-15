@@ -10,6 +10,8 @@ import gzip
 import time
 import argparse
 
+import activations
+
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 
@@ -24,9 +26,9 @@ args = parser.parse_args()
 # initialize the autoencoder
 if args.f is None:
 
-    layers = [2, 2, 1, 2, 2]
+    layers = [2, 1, 2]#[2, 2, 1, 2, 2]
 
-    net = Net(layers)
+    net = Net(layers, activation=activations.relu)
 
 else:
 
@@ -45,7 +47,7 @@ else:
 
 if args.f is None or not isinstance(params.training_data, list):
 
-    k = 4 # number of segments
+    k = 1 # number of segments
     m = 100 // k # points per segment
     n = k * m
 

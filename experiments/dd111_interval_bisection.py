@@ -8,6 +8,7 @@ Author: Andrew Cook
 from pyibex import *
 from queue import Queue
 import time
+import pickle, gzip
 
 sigmoid = Function("z", "1/(1+exp(-z))")
 
@@ -80,3 +81,11 @@ while not queue.is_empty():
 print('')
 print(iteration)
 print(len(verified))
+
+if len(verified) > 0:
+
+    f = gzip.open('./output', 'wb')
+
+    pickle.dump(verified, f)
+
+    f.close()
