@@ -47,9 +47,9 @@ class Net():
 
             for i in range(L):
 
-                self.weights.append( rng.normal(loc=0.0, scale=1.0, size=(layers[i + 1], layers[i])) )
+                self.weights.append( rng.normal(loc=0.0, scale=2.0, size=(layers[i + 1], layers[i])) )
 
-                self.biases.append( rng.normal(loc=0.0, scale=1.0, size=layers[i + 1]) )
+                self.biases.append( rng.normal(loc=0.0, scale=2.0, size=(layers[i + 1], 1)) )
 
         else:
 
@@ -82,6 +82,12 @@ class Net():
             self.activation = self.relu
 
             self.d_activation = self.d_relu
+
+        elif activation == activations.sin:
+
+            self.activation = np.sin
+
+            self.d_activation = lambda x: -np.cos(x)
 
     def d_relu_interval(self, x):
 
@@ -157,11 +163,15 @@ class Net():
 
     def feedforward(self, x):
 
+        input_dimension = self.layers[0]
+
+        x = x.reshape(input_dimension, 1)
+
         for i in range(len(self.layers) - 1):
 
             x = self.activation(np.dot(self.weights[i], x) + self.biases[i])
 
-        return(x)
+        return(x.flatten())
 
     def cost(self, x, label):
 
@@ -169,7 +179,7 @@ class Net():
 
 
 
-    def SGD(self, training_data, epochs, size_minibatch, size_validation, eta):
+    def SGD(self, training_data, epochs, size_minibatch, size_validation, eta, separate_validation=True):
         """
         inputs:
         training_data: list of tuples of type (<class 'numpy.ndarray'>, <class 'numpy.ndarray'>), where
@@ -177,6 +187,8 @@ class Net():
         size_minibatch: <class 'int'>
         size_validation: <class 'int'>, the number of data points to be set aside for validation in
             each epoch. Taken from training_data once shuffled.
+        separate_validation: <class 'bool'>, if True, remove the validation data from the training data
+            set before training.
 
         output:
         validation_costs: <class 'numpy.ndarray'>
@@ -192,13 +204,36 @@ class Net():
 
         random.shuffle(data_shuffled)
 
-        assert size_validation < size_total, "Validation set is bigger than or equal to the whole dataset."
+        input_dimension = self.layers[0]
+        output_dimension = self.layers[-1]
+
+        for i in range(size_total):
+
+            point, label = data_shuffled[i]
+
+            data_shuffled[i] = (point.reshape(input_dimension, 1), label.reshape(output_dimension, 1))
+        
+        if separate_validation:
+
+            assert size_validation < size_total, "Validation set is bigger than or equal to the whole dataset."
+
+        else:
+
+            assert size_validation <= size_total, "Validation set is bigger than the whole dataset."
+
         validation_data = data_shuffled[:size_validation]
-        data_shuffled = data_shuffled[size_validation:]
+
+        if separate_validation:
+
+            data_shuffled = data_shuffled[size_validation:]
+
+            size_data = size_total - size_validation
+
+        else:
+
+            size_data = size_total
 
         validation_costs = []
-
-        size_data = size_total - size_validation
 
         alpha = 0.1
         avg = 0
@@ -232,7 +267,7 @@ class Net():
 
                     self.backpropagation(minibatch, eta_p)
 
-                # perform backpropagation for remainding training samples
+                # perform backpropagation for remaining training samples
                 n = size_data // size_minibatch
 
                 remainder_index = n * size_minibatch
@@ -318,7 +353,7 @@ class Net():
 
             for l in range(L - 2, 0, -1):  # L - 2: one for indexing from 0, one for taking above into account
 
-                dC_da[l] = np.dot((dC_da[l + 1] * self.d_activation(z[l + 1])).flatten(), self.weights[l + 1])
+                dC_da[l] = np.dot((dC_da[l + 1] * self.d_activation(z[l + 1])).T, self.weights[l + 1]).T
                 
                 dC_dz = (dC_da[l] * self.d_activation(z[l])).reshape((1, self.layers[l + 1])).T
 
@@ -326,7 +361,7 @@ class Net():
                 biases_avg[l] += dC_da[l] * self.d_activation(z[l])
 
             # because of a[] starting at layer 1, this is a special case
-            dC_da[0] = np.dot((dC_da[1] * self.d_activation(z[1])).flatten(), self.weights[1])
+            dC_da[0] = np.dot((dC_da[1] * self.d_activation(z[1])).T, self.weights[1]).T
             
             dC_dz = (dC_da[0] * self.d_activation(z[0])).reshape((1, self.layers[1])).T
 

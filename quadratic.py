@@ -26,9 +26,11 @@ args = parser.parse_args()
 # initialize the autoencoder
 if args.f is None:
 
-    layers = [2, 1, 2]#[2, 2, 1, 2, 2]
+    layers = [2, 2, 1, 2, 2]
 
-    net = Net(layers, activation=activations.relu)
+    seeds = (0, 1)
+
+    net = Net(layers, seeds, activation=activations.sigmoid)
 
 else:
 
@@ -83,10 +85,10 @@ else:
 # train the network
 if args.f is None:
 
-    epochs = 200
+    epochs = 1000
     size_minibatch = n // 20
     size_validation = n // 5
-    eta = 2
+    eta = 4.
 
 else:
 
@@ -152,6 +154,9 @@ validation_epochs = np.arange(epochs, dtype='float64')
 
 fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 ax[0].plot(validation_costs)
+ax[0].set_title('training validation')
+ax[0].set_xlabel('epochs')
+ax[0].set_ylabel('loss')
 
 x = data[0,:]
 y = data[1,:]

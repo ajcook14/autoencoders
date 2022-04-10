@@ -16,7 +16,9 @@ args = parser.parse_args()
 
 file_name = args.file_name[0]
 
-f = gzip.open(f'./data/fixed_points/{file_name}', 'rb')
+aname = 'sigmoid'
+
+f = gzip.open(f'./data/fixed_points/layers/{aname}/{file_name}', 'rb')
 
 tup = pickle.load(f)
 
@@ -24,7 +26,7 @@ if len(tup) == 3:
 
     fixed_points, layers, seed = tup
 
-    limits = (-20.0, 20.0, -10.0, 10.0)
+    limits = (-20.0, 20.0, -20.0, 20.0)
 
     activation = activations.sigmoid
 
@@ -46,6 +48,7 @@ f.close()
 
 weights_lower, weights_upper, biases_lower, biases_upper = limits
 
+print(f'layers = {layers}')
 
 
 L = len(layers) - 1
@@ -67,20 +70,19 @@ for iteration in range(len(fixed_points)):
         if i == 0:
 
             parameters.append( temp_weights[0,0] )
-            parameters.append( temp_biases[0] )
+            parameters.append( temp_weights[1,0] )
+            #parameters.append( temp_biases[0] )
 
         else:
 
             projected.append( temp_weights[0,0] )
-            projected.append( temp_weights[0] )
+            projected.append( temp_weights[0,1] )
 
     #if -10 < projected[1] < 0 and -10 < projected[0] < 0:
 
     data.append((np.array(parameters), fixed_points[iteration]))
 
 
-print(len(data))
-print(data[-1])
 
 one = []
 two = []
@@ -109,7 +111,11 @@ three_data = np.hstack(three)
 
 fig, ax = plt.subplots()
 
-ax.scatter(one_data[0,:], one_data[1,:], s=marker_size/4, marker='x')
-ax.scatter(three_data[0,:], three_data[1,:], s=marker_size/4, marker='x')
+ax.scatter(one_data[0,:], one_data[1,:], s=marker_size/4, marker='x', label='1 fixed point')
+ax.scatter(three_data[0,:], three_data[1,:], s=marker_size/4, marker='x', label='3 fixed points')
+ax.set_title('<<title>>')
+ax.set_xlabel('<<x-axis>>')
+ax.set_ylabel('<<y-axis>>')
+ax.legend()
 
 plt.show()

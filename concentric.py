@@ -17,9 +17,11 @@ marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 layers = [2, 5, 1, 5, 2]#[2, 3, 3, 1, 2]
 
-net = Net(layers)
+seeds = (2, 3)
 
-n = 25
+net = Net(layers, seeds)
+
+n = 50
 half_validation = n // 5
 
 # initialize the data
@@ -41,7 +43,7 @@ for i in range(2 * n):
     training_data.append( (data[:, i], data[:, i]) )
 
 # train the network
-epochs = 50
+epochs = 7000
 size_validation = 2 * half_validation
 size_minibatch = 1#(2 * n) // 25
 eta = 1
@@ -49,15 +51,15 @@ validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validatio
 
 # save the network parameters
 fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
-f = gzip.open(f'./data/concentric/{fname}', 'wb')
+#f = gzip.open(f'./data/concentric/{fname}', 'wb')
 
 seeds = (net.seed, net.np_seed)
 parameters = (net.weights, net.biases)
 training_info = ''
 params = Parameters(layers, training_data, epochs, size_minibatch, size_validation, eta, seeds=seeds, parameters=parameters, training_info=training_info)
 
-pickle.dump(params, f)
-f.close()
+#pickle.dump(params, f)
+#f.close()
 
 # compute output manifold
 output = np.zeros((2, 2 * n))

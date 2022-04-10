@@ -19,13 +19,23 @@ intersection = np.vectorize(lambda x, y: x & y)
 
 def inverse(m): # m is a 2 x 2 matrix possibly of intervals
 
-    if m.shape == (1, 1):
+    if m.shape == (1, ):
+
+        if m[0].contains(0):
+
+            raise ZeroDivisionError
 
         inverse = 1 / m
 
-        if inverse[0,0].contains(0):
+        return(inverse)
+
+    if m.shape == (1, 1):
+
+        if m[0,0].contains(0):
 
             raise ZeroDivisionError
+
+        inverse = 1 / m
 
         return(inverse)
 
@@ -78,15 +88,13 @@ def newton(f, x):
 
             return((1, None))
 
-        elif False in intersects(N_f, x):
+        elif False in intersects(N_f, x): # x \cap N_f == \phi
 
             return((2, None))
 
         else:
 
-            x = intersection(N_f, x)
-
-            return((3, x))
+            return((3, intersection(N_f, x)))
 
 """
 import numpy as np

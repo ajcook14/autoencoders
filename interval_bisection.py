@@ -14,6 +14,7 @@ from queue import Queue
 
 from newton import newton
 
+count = True # set this if you just want to know the number of zeroes
 
 def delta(interval):
 
@@ -75,6 +76,11 @@ def interval_bisection(f, queue):
     """
     Notes:
     Does not currently account for rounding errors in Python.
+
+    Input:
+    f: a function of type <class 'numpy.ndarray'> => <class 'numpy.ndarray'> whose input and output have the same shape.
+    f should accept inputs of dtype float or pyibex intervals.
+    f must also have a jacobian method that returns the matrix derivative of f.
     Output:
     verified: list of small 'intervals' (boxes) covering all fixed points, 
         each box containing exactly one fixed point.
@@ -114,7 +120,22 @@ def interval_bisection(f, queue):
 
         if result[0] == 0: # N_f \subseteq x
 
-            verified.append(interval)
+            if interval[arg_max_dim(interval)].diam() < 1e-5 or count:
+
+                verified.append(interval)
+
+            else:
+
+                split = divide(interval)
+
+                for half in split:
+
+                    for element in list(half):
+
+                        element.inflate(1e-17)
+
+                queue.append(split[0])
+                queue.append(split[1])
 
         elif result[0] == 1 or result[0] == 4: # x \subset N_f or jacobian is singular
 
@@ -146,7 +167,7 @@ def rectangles(ax, intervals):
     boxes = [Rectangle((i[0][0], i[1][0]), i[0].diam(), i[1].diam(), linewidth=2) if min_dim(i) > tol\
     else Rectangle((i[0].mid() - tol/2, i[1].mid() - tol/2), tol, tol, linewidth=2) for i in intervals]
 
-    pc = PatchCollection(boxes, facecolor='c', alpha=0.5, edgecolor='r')
+    pc = PatchCollection(boxes, facecolor='r', alpha=0.8, edgecolor='r')
 
     ax.add_collection(pc)
 

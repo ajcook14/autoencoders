@@ -32,7 +32,7 @@ def check_fixed_points(layers,
 
     parameters = (weights, biases)
 
-    activation = activations.relu
+    activation = activations.sigmoid
     net = Net(layers, parameters=parameters, activation=activation)
 
     rng = np.random.default_rng(seed)
@@ -49,7 +49,10 @@ def check_fixed_points(layers,
 
             for i in range(L):
 
-                weights[i] = rng.uniform(weights_lower, weights_upper, (layers[i + 1], layers[i]))
+                if i == 0:
+                    weights[i] = rng.uniform(weights_lower, weights_upper, (layers[i + 1], layers[i]))
+                else:
+                    weights[i] = rng.uniform(weights_lower, weights_upper, (layers[i + 1], layers[i]))
                 biases[i] = rng.uniform(biases_lower, biases_upper, layers[i + 1]) # remove this line for zero biases
 
             f = DiffAE(net)
@@ -61,8 +64,7 @@ def check_fixed_points(layers,
 
             if verified == -1:
 
-                print('')
-                print(f'iteration {iteration} unverified')
+                print(f'\niteration {iteration} unverified')
 
                 fixed_points.append(-1)
 
@@ -91,7 +93,7 @@ def check_fixed_points(layers,
 
     f = gzip.open(f'./data/fixed_points/layers/{aname}/{fname}', 'wb')
 
-    print(f'len(fixed_points) = {len(fixed_points)}')
+    print(f'\nlen(fixed_points) = {len(fixed_points)}')
 
     limits = (weights_lower, weights_upper, biases_lower, biases_upper)
     # if no limits, assume weights_lower=-20.0, weights_upper=20.0, 
@@ -117,12 +119,12 @@ def main():
             layers = [1, hidden, 1]
 
             if check_fixed_points(layers,
-                weights_lower=-10.0,
-                weights_upper=10.0,
-                biases_lower=-1.0,
-                biases_upper=1.0,
+                weights_lower=-20.0,
+                weights_upper=20.0,
+                biases_lower=0.0,
+                biases_upper=0.0,
                 seed=0,#0,
-                samples=300000) < 0:
+                samples=30000) < 0:
 
                 break
 

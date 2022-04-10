@@ -31,6 +31,7 @@ f.close()
 
 parameters = (params.weights, params.biases)
 net = Net(params.layers, parameters=parameters)
+print(params.layers)
 
 # initialize the data
 if isinstance(params.training_data, list):
@@ -65,8 +66,8 @@ xo = output[0, :]
 yo = output[1, :]
 
 # compute vector field
-xi = np.arange(0, 1, 1/n)
-yi = np.arange(0, 0.5, 1/n)
+xi = np.arange(0, 1, 2/n)
+yi = np.arange(0, 0.5, 2/n)
 
 m = yi.shape[0]
 
@@ -75,7 +76,7 @@ uu, vv = np.meshgrid(xi, yi)
 
 for i in range(m):
 
-    for j in range(n):
+    for j in range(xi.shape[0]):
 
         output = net.feedforward( np.array([xx[i, j], yy[i, j]]) )
 
@@ -105,10 +106,11 @@ x = data[0,:]
 y = data[1,:]
 ax.scatter(x, y, s=marker_size/4, c='b', label='input')
 ax.scatter(xo, yo, s=marker_size/4, c='g', label='output')
-q = ax.quiver(xx, yy, uu, vv)
+q = ax.quiver(xx, yy, uu, vv, color='tab:gray')
 
 ax.legend()
 plt.title('number of verified intervals = %d'%len(verified))
+ax.set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
 
 # a very simple ode solver using Euler's method
 def onclick(event):
