@@ -384,9 +384,10 @@ class Net():
         L = len(self.layers) - 1  # actual number of layers
 
         # forward propagation
+        input_dimension = self.layers[0]
 
-        a = x   # note this approach is different to that used in the training algorithm, since here
-                # we can avoid a special case for the last layer in the backpropagation (first layer)
+        a = x.reshape(input_dimension, 1)   # note this approach is different to that used in the training algorithm, since here
+                                            # we can avoid a special case for the last layer in the backpropagation (first layer)
         z = []
 
         for j in range(L):
