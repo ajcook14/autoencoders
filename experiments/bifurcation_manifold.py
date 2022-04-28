@@ -7,7 +7,8 @@ from queue import Queue
 from diffae import DiffAE
 import copy
 import sys
-from time import time
+import time
+import gzip, pickle
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -118,6 +119,10 @@ def bisection(net1, net2, tol=1e-2):
 
 layers = [1, 2, 1]
 
+p1 = (0, 0, (0, 0)) # these are the indices for the plotted parameters in the form
+p2 = (0, 0, (1, 0)) # (weight (0)/bias (1), layer, indices as a 2-tuple)
+p3 = (0, 1, (0, 1))
+
 L = len(layers) - 1
 
 max_fixed_points = 3
@@ -129,7 +134,7 @@ queue = Queue()
 
 init = np.array([Interval(0, 1)] * layers[0])
 
-for i in range(4000):
+for i in range(40):
 
     # randomly generate a neural network
 
@@ -142,14 +147,29 @@ for i in range(4000):
 
     for i in range(L):
 
-        weights.append( rng.uniform(low=-40., high=40., size=(layers[i + 1], layers[i])) )
-
-        #biases.append( rng.uniform(low=-20., high=20., size=(layers[i + 1], 1)) )
+        weights.append( np.ones((layers[i + 1], layers[i])) )
         biases.append( np.zeros((layers[i + 1], 1)) )
 
-    weights[1][0, 0] = 1.
-
     parameters = (weights, biases)
+
+    generated = [0., 0., 0.]
+    for i in range(3):
+
+        p = [p1, p2, p3][i]
+        if p[0] == 0:
+
+            generated[i] = rng.uniform(-40.,40.) # range for weights
+
+        elif p[0] == 1:
+
+            generated[i] = rng.uniform(-40.,40.) # range for biases
+
+        else:
+
+            print('strange behaviour in plotted parameter indexing')
+    
+    generated = tuple(generated)
+    parameters[p1[0]][p1[1]][p1[2]], parameters[p2[0]][p2[1]][p2[2]], parameters[p3[0]][p3[1]][p3[2]] = generated
 
     net = Net(layers, parameters=parameters, activation=activations.sigmoid)
 
@@ -180,12 +200,8 @@ for i in range(4000):
         point = net
         plot_data[num_fixed_points - 1].append(point)
 
-#print(len(plot_data[0]))
-#print(len(plot_data[1]))
-#print(len(plot_data[2]))
-#ones = np.stack(plot_data[0])
-#twos = np.stack(plot_data[1])
-#threes = np.stack(plot_data[2])
+example_net = plot_data[num_fixed_points - 1][-1]
+example = example_net.weights, example_net.biases
 
 if len(plot_data[1]) > 0:
 
@@ -194,9 +210,11 @@ if len(plot_data[1]) > 0:
 
 n = min(len(plot_data[0]), len(plot_data[2]))
 
+assert n > 0, 'no pair of generated networks with 1 and 3 fixed points'
+
 manifold = []
 
-start = time()
+start = time.time()
 for i in range(n):
 
     print(f'\riteration {i} of {n}', end='')
@@ -204,19 +222,24 @@ for i in range(n):
 
     net = bisection(plot_data[0][i], plot_data[2][i])
 
-    weights, biases = net.weights, net.biases
+    parameters = net.weights, net.biases
 
-    point = np.array(list(weights[0].flatten()) + [weights[1].flatten()[1]])
+    point = np.array([parameters[p1[0]][p1[1]][p1[2]], parameters[p2[0]][p2[1]][p2[2]], parameters[p3[0]][p3[1]][p3[2]]])
 
     manifold.append(point)
 
-print(f'\ncompleted in {time() - start} seconds')
+print(f'\ncompleted in {time.time() - start} seconds')
 
 manifold = np.stack(manifold)
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+fname = time.strftime("%Y%m%d_%H%M%S", time.localtime(time.time()))
+fname += '_' + '-'.join(map(lambda x: str(x), layers))
 
-ax.scatter(manifold[:,0], manifold[:,1], manifold[:,2])
+f = gzip.open(f'../data/manifold/{fname}', 'wb')
 
-plt.show()
+pickle.dump((layers, manifold, (p1, p2, p3), example), f)
+# example is a parameters tuple which determines the values of the fixed parameters
+
+f.close()
+
+print(f'saved to file {fname}')
