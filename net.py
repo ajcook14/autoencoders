@@ -179,7 +179,7 @@ class Net():
 
 
 
-    def SGD(self, training_data, epochs, size_minibatch, size_validation, eta, separate_validation=True):
+    def SGD(self, training_data, epochs, size_minibatch, size_validation, eta, separate_validation=True, verbose=True):
         """
         inputs:
         training_data: list of tuples of type (<class 'numpy.ndarray'>, <class 'numpy.ndarray'>), where
@@ -255,8 +255,11 @@ class Net():
                 mins = (overall_sec // 60) % 60
                 hrs  = ((overall_sec // 60) // 60) % 24
                 days = ((overall_sec // 60) // 60) // 24
-                print("\rEpoch %7d of %7d, estimated %3d:%2d:%2d:%2d (ddd:hh:mm:ss) left"%(epoch + 1, epochs, days, hrs,\
-                mins, sec), end='')
+
+                if verbose:
+
+                    print("\rEpoch %7d of %7d, estimated %3d:%2d:%2d:%2d (ddd:hh:mm:ss) left"%(epoch + 1, epochs, days, hrs,\
+                    mins, sec), end='')
 
                 sys.stdout.flush()
 
@@ -291,8 +294,10 @@ class Net():
 
                 validation_costs.append(cost_avg)
 
-                print(", validation_loss = %3.3f"%(cost_avg,), end='')
-                sys.stdout.flush()
+                if verbose:
+
+                    print(", validation_loss = %3.3f"%(cost_avg,), end='')
+                    sys.stdout.flush()
 
                 eta_p = eta#* cost_avg / 70
 
@@ -302,7 +307,9 @@ class Net():
         except KeyboardInterrupt:
             pass
 
-        print('')
+        if verbose:
+
+            print('')
 
         return(np.array(validation_costs))
 
