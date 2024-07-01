@@ -140,5 +140,5 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.show()
-#plt.savefig(f'./figures/quadratic/{file_name}_newton.png')
+#plt.show()
+plt.savefig(f'./figures/quadratic/{file_name}_newton.png')

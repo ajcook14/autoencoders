@@ -15,11 +15,11 @@ import time
 
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
-layers = [2, 1, 2]#[2, 3, 3, 1, 2]
+layers = [2, 3, 1, 3, 2]
 
 net = Net(layers)
 
-n = 50
+n = 24
 size_validation = n // 5
 
 # initialize the data
@@ -36,9 +36,9 @@ for i in range(n):
     training_data.append( (data[:, i], data[:, i]) )
 
 # train the network
-epochs = 1000
+epochs = 4000
 size_minibatch = 1#(2 * n) // 25
-eta = 1
+eta = 2
 validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta)
 
 # save the network parameters

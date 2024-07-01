@@ -1,5 +1,4 @@
-from pyibex import *
-from tubex_lib import *
+from codac import *
 
 import numpy as np
 
@@ -59,7 +58,7 @@ def newton(f, x):
     """
     Inputs:
     f: instance of DiffAE class
-    x: numpy array of pyibex intervals (ie. a box)
+    x: numpy array of codac intervals (ie. a box)
 
     Output: a 2-tuple, out
     out[0]: an integer flag of result type

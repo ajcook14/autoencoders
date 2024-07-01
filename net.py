@@ -1,5 +1,4 @@
-from pyibex import *
-from tubex_lib import *
+from codac import *
 
 import numpy as np
 import random
@@ -91,7 +90,7 @@ class Net():
 
     def d_relu_interval(self, x):
 
-        """x: pyibex interval
+        """x: codac interval
         """
 
         if x.ub() < 0.:
@@ -110,7 +109,7 @@ class Net():
 
         if isinstance(z, np.ndarray):
 
-            if isinstance(z.flat[0], pyibex.pyibex.Interval):
+            if isinstance(z.flat[0], core.Interval):
 
                 return( self.vsigmoid_interval(z) )
 
@@ -118,7 +117,7 @@ class Net():
 
                 return( 1/(1 + np.exp(-z)) )
 
-        elif isinstance(z, pyibex.pyibex.Interval):
+        elif isinstance(z, core.Interval):
 
             return( self.sigmoid_interval(z) )
 
@@ -136,7 +135,7 @@ class Net():
 
         if isinstance(x, np.ndarray):
 
-            if isinstance(x.flat[0], pyibex.pyibex.Interval):
+            if isinstance(x.flat[0], core.Interval):
 
                 return( self.vrelu_interval(x) )
 
@@ -152,7 +151,7 @@ class Net():
 
         if isinstance(x, np.ndarray):
 
-            if isinstance(x.flat[0], pyibex.pyibex.Interval):
+            if isinstance(x.flat[0], core.Interval):
 
                 return( self.vd_relu_interval(x) )
 

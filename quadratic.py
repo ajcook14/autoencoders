@@ -169,4 +169,6 @@ s = 'architecture = %s, n = %d, epochs = %d, \nsize_minibatch = %d, eta = %f'%\
 plt.title(s)
 ax[1].legend()
 
-plt.show()
+if not args.s is None:
+
+    plt.savefig(f'./figures/quadratic/{fname}')

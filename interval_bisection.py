@@ -1,5 +1,4 @@
-from pyibex import *
-from tubex_lib import *
+from codac import *
 
 from net import Net
 import numpy as np
@@ -22,7 +21,7 @@ def delta(interval):
 
 def min_dim(interval):
 
-    if isinstance(interval, pyibex.pyibex.Interval):
+    if isinstance(interval, core.Interval):
 
         return( delta(interval) )
 
@@ -38,7 +37,7 @@ def min_dim(interval):
 
 def arg_max_dim(interval):
 
-    if isinstance(interval, pyibex.pyibex.Interval):
+    if isinstance(interval, core.Interval):
 
         return( delta(interval) )
 
@@ -54,7 +53,7 @@ def arg_max_dim(interval):
 
 def divide(interval):
 
-    if isinstance(interval, pyibex.pyibex.Interval):
+    if isinstance(interval, core.Interval):
 
         return(interval.bisect(0.5))
 
@@ -79,7 +78,7 @@ def interval_bisection(f, queue):
 
     Input:
     f: a function of type <class 'numpy.ndarray'> => <class 'numpy.ndarray'> whose input and output have the same shape.
-    f should accept inputs of dtype float or pyibex intervals.
+    f should accept inputs of dtype float or codac intervals.
     f must also have a jacobian method that returns the matrix derivative of f.
     Output:
     verified: list of small 'intervals' (boxes) covering all fixed points, 
