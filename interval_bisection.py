@@ -161,9 +161,9 @@ def interval_bisection(f, queue):
 
 def rectangles(ax, intervals):
 
-    tol = 0.01
+    tol = 0.03
 
-    boxes = [Rectangle((i[0][0], i[1][0]), i[0].diam(), i[1].diam(), linewidth=2) if min_dim(i) > tol\
+    boxes = [Rectangle((i[0].lb(), i[1].lb()), i[0].diam(), i[1].diam(), linewidth=2) if min_dim(i) > tol\
     else Rectangle((i[0].mid() - tol/2, i[1].mid() - tol/2), tol, tol, linewidth=2) for i in intervals]
 
     pc = PatchCollection(boxes, facecolor='r', alpha=0.8, edgecolor='r')

@@ -29,6 +29,9 @@ f = gzip.open(f'./data/quadratic/{file_name}', 'rb')
 params = pickle.load(f)
 f.close()
 
+for i in range(len(params.biases)):
+    params.biases[i] = params.biases[i][np.newaxis].T
+
 parameters = (params.weights, params.biases)
 net = Net(params.layers, parameters=parameters)
 print(params.layers)
@@ -104,13 +107,19 @@ rectangles(ax, verified)
 # plot results
 x = data[0,:]
 y = data[1,:]
-ax.scatter(x, y, s=marker_size/4, c='b', label='input')
-ax.scatter(xo, yo, s=marker_size/4, c='g', label='output')
+ax.scatter(x, y, s=marker_size*2, c='b', marker="+", label='input')
+ax.scatter(xo, yo, s=marker_size*2, c='g', marker="x", label='output')
 q = ax.quiver(xx, yy, uu, vv, color='tab:gray')
 
 ax.legend()
-plt.title('number of verified intervals = %d'%len(verified))
-ax.set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+#plt.title('number of verified intervals = %d'%len(verified))
+#ax.set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+ax.set_xlabel("$x$", fontsize=18)
+ax.set_ylabel("$y$", fontsize=18)
+ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+ax.tick_params(axis='both', which='major', labelsize=15)
+ax.tick_params(axis='both', which='minor', labelsize=15)
 
 # a very simple ode solver using Euler's method
 def onclick(event):
@@ -140,5 +149,5 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-#plt.show()
-plt.savefig(f'./figures/quadratic/{file_name}_newton.png')
+plt.show()
+#plt.savefig(f'./figures/quadratic/{file_name}_newton.png')

@@ -19,12 +19,16 @@ marker_size = mpl.rcParams['lines.markersize'] ** 2
 
 
 
-f = gzip.open('./data/circle/20210413_223425', 'rb') #20210414_115426', 'rb')
+f = gzip.open('./data/circle/20210413_222431', 'rb') #20210414_115426', 'rb')
 params = pickle.load(f)
 f.close()
 
+for i in range(len(params.biases)):
+    params.biases[i] = params.biases[i][np.newaxis].T
+
 parameters = (params.weights, params.biases)
 net = Net(params.layers, parameters=parameters)
+print(net.layers)
 
 n = 25
 size_validation = n // 5
@@ -92,7 +96,7 @@ verified = interval_bisection(f, queue)
 
 print('number of verified intervals = %d'%len(verified))
 
-fig, ax = plt.subplots(figsize=(24, 24))
+fig, ax = plt.subplots(figsize=(12, 12))
 
 #ax.set_xlim([0, 1])
 #ax.set_ylim([0, 1])
@@ -100,11 +104,18 @@ fig, ax = plt.subplots(figsize=(24, 24))
 rectangles(ax, verified)
 
 # plot results
-ax.scatter(data_x, data_y, s=marker_size/4, c='b', label='input')
-ax.scatter(xo, yo, s=marker_size/4, c='g', label='output')
-q = ax.quiver(xx, yy, uu, vv)
+ax.scatter(data_x, data_y, s=marker_size*2, c='b', marker="+", label='input')
+ax.scatter(xo, yo, s=marker_size*2, c='g', marker="x", label='output')
+q = ax.quiver(xx, yy, uu, vv, color='tab:gray')
 
 ax.legend()
+
+ax.set_xlabel("$x$", fontsize=18)
+ax.set_ylabel("$y$", fontsize=18)
+ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+ax.tick_params(axis='both', which='major', labelsize=15)
+ax.tick_params(axis='both', which='minor', labelsize=15)
 
 # a very simple ode solver using Euler's method
 def onclick(event):
