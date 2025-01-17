@@ -3,6 +3,7 @@ from parameters import Parameters
 import numpy as np
 import gzip
 import pickle
+import argparse
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -17,28 +18,39 @@ from diffae import DiffAE
 
 marker_size = mpl.rcParams['lines.markersize'] ** 2
 
+parser = argparse.ArgumentParser()
+parser.add_argument('file_name', metavar='YYYYMMDD_HHMMSS', type=str, nargs='+',
+                    help='file name of the pickled parameters object')
 
+args = parser.parse_args()
 
-f = gzip.open('./data/circle/20210413_222431', 'rb') #20210414_115426', 'rb')
+file_name = args.file_name[0]
+f = gzip.open(f'./data/circle/{file_name}', 'rb')
+#f = gzip.open('./data/circle/20210413_222431', 'rb') #20210414_115426', 'rb')
 params = pickle.load(f)
 f.close()
 
-for i in range(len(params.biases)):
-    params.biases[i] = params.biases[i][np.newaxis].T
+if int(file_name[:4]) <= 2021:
+    for i in range(len(params.biases)):
+        params.biases[i] = params.biases[i][np.newaxis].T
 
 parameters = (params.weights, params.biases)
 net = Net(params.layers, parameters=parameters)
+print(f'seeds = {(params.seed, params.np_seed)}')
 print(net.layers)
 
-n = 25
-size_validation = n // 5
-
 # initialize the data
-theta = np.linspace(-np.pi, np.pi, n + size_validation)
-data_x = 0.4 * np.cos(theta) + 0.5
-data_y = 0.4 * np.sin(theta) + 0.5
+assert(isinstance(params.training_data, list))
 
-data = np.stack([data_x, data_y])
+n = len(params.training_data)
+
+data = np.zeros((2, n))
+
+for i in range(len(params.training_data)):
+
+    point = params.training_data[i]
+
+    data[:, i] = point[0]
 
 # compute output manifold
 output = np.zeros((2, n))
@@ -104,7 +116,9 @@ fig, ax = plt.subplots(figsize=(12, 12))
 rectangles(ax, verified)
 
 # plot results
-ax.scatter(data_x, data_y, s=marker_size*2, c='b', marker="+", label='input')
+x = data[0,:]
+y = data[1,:]
+ax.scatter(x, y, s=marker_size*2, c='b', marker="+", label='input')
 ax.scatter(xo, yo, s=marker_size*2, c='g', marker="x", label='output')
 q = ax.quiver(xx, yy, uu, vv, color='tab:gray')
 
@@ -145,8 +159,10 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.show()
+#plt.show()
+#plt.savefig('./figures/circle.png')
 #plt.savefig('./figures/circle/tol=%f.png'%tol)
+plt.savefig(f'./figures/circle/{file_name}_newton.png')
 
 """
 # plot the encoder

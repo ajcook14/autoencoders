@@ -20,6 +20,10 @@ parser.add_argument('--f', metavar='YYYYMMDD_HHMMSS', required=False, type=str, 
                     help='file name of the pickled parameters object')
 parser.add_argument('--s', metavar='save', required=False, type=bool, nargs='*',
                     help='save the trained network in a parameters object')
+parser.add_argument('--seed', metavar='seed', required=False, type=int, nargs='*',
+                    help='pseudorandom seed for reproducibility')
+parser.add_argument('--n', metavar='n', required=False, type=int, nargs='*',
+                    help='size of training dataset')
 
 args = parser.parse_args()
 
@@ -28,7 +32,7 @@ if args.f is None:
 
     layers = [2, 2, 1, 2, 2]
 
-    seeds = (0, 1)
+    seeds = (args.seed[0], args.seed[0] + 1)
 
     net = Net(layers, seeds, activation=activations.sigmoid)
 
@@ -49,8 +53,8 @@ else:
 
 if args.f is None or not isinstance(params.training_data, list):
 
-    k = 1 # number of segments
-    m = 100 // k # points per segment
+    k = 3 # number of segments
+    m = args.n[0] // k # points per segment
     n = k * m
 
     a = 0.1
@@ -85,9 +89,10 @@ else:
 # train the network
 if args.f is None:
 
-    epochs = 1000
-    size_minibatch = n // 20
-    size_validation = n // 5
+    epochs = 5000
+    size_minibatch = 1 #n // 20
+    size_validation = n#// 5
+    separate_validation = False
     eta = 4.
 
 else:
@@ -97,7 +102,7 @@ else:
     size_validation = params.size_validation
     eta = params.eta
 
-validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta)
+validation_costs = net.SGD(training_data, epochs, size_minibatch, size_validation, eta, separate_validation=separate_validation)
 
 # save the network parameters
 if not args.s is None:
@@ -115,7 +120,7 @@ if not args.s is None:
 
     seeds = (net.seed, net.np_seed)
     parameters = (net.weights, net.biases)
-    training_info = ''
+    training_info = f'separate_validation={separate_validation}'
     params = Parameters(layers, training_data, epochs, size_minibatch, size_validation, eta, seeds=seeds, parameters=parameters, training_info=training_info)
 
     pickle.dump(params, f)
@@ -134,15 +139,16 @@ xo = output[0, :]
 yo = output[1, :]
 
 # compute vector field
-xi = np.arange(0, 1, 1/n)
-yi = np.arange(0, 1, 1/n)
+grid_size = 50
+xi = np.arange(0, 1, 1/grid_size)
+yi = np.arange(0, 1, 1/grid_size)
 
 xx, yy = np.meshgrid(xi, yi)
 uu, vv = np.meshgrid(xi, yi)
 
-for i in range(n):
+for i in range(grid_size):
 
-    for j in range(n):
+    for j in range(grid_size):
 
         output = net.feedforward( np.array([xx[i, j], yy[i, j]]) )
 

@@ -91,7 +91,7 @@ def interval_bisection(f, queue):
 
     while not queue.is_empty():
 
-        if time.time() - begin > 5:
+        if time.time() - begin > 40:
             return(-1)
 
         interval = queue.serve()

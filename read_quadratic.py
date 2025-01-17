@@ -29,34 +29,27 @@ f = gzip.open(f'./data/quadratic/{file_name}', 'rb')
 params = pickle.load(f)
 f.close()
 
-for i in range(len(params.biases)):
-    params.biases[i] = params.biases[i][np.newaxis].T
+if int(file_name[:4]) <= 2021:  # for backward compatibility
+    for i in range(len(params.biases)):
+        params.biases[i] = params.biases[i][np.newaxis].T
 
 parameters = (params.weights, params.biases)
 net = Net(params.layers, parameters=parameters)
+print(f'seeds = {(params.seed, params.np_seed)}')
 print(params.layers)
 
 # initialize the data
-if isinstance(params.training_data, list):
+assert(isinstance(params.training_data, list))
 
-    n = len(params.training_data)
+n = len(params.training_data)
 
-    data = np.zeros((2, n))
+data = np.zeros((2, n))
 
-    for i in range(len(params.training_data)):
+for i in range(len(params.training_data)):
 
-        point = params.training_data[i]
+    point = params.training_data[i]
 
-        data[:, i] = point[0]
-
-else:
-
-    n = 100
-
-    x = np.arange(0.1, 0.9, 0.8/n)
-    y = 1 * (x - x**2)
-
-    data = np.stack([x, y])
+    data[:, i] = point[0]
 
 # compute output manifold
 output = np.zeros((2, n))
@@ -69,8 +62,9 @@ xo = output[0, :]
 yo = output[1, :]
 
 # compute vector field
-xi = np.arange(0, 1, 2/n)
-yi = np.arange(0, 0.5, 2/n)
+grid_size = 100
+xi = np.arange(0, 1, 2/grid_size)
+yi = np.arange(0, 0.5, 2/grid_size)
 
 m = yi.shape[0]
 
@@ -96,6 +90,8 @@ queue = Queue()
 queue.append(init)
 
 verified = interval_bisection(f, queue)
+
+print(f'number of fixed points = {len(verified)}')
 
 fig, ax = plt.subplots(figsize=(12, 6))
 
@@ -149,5 +145,6 @@ def onclick(event):
     plt.show()
 
 cid = fig.canvas.mpl_connect('button_press_event', onclick)
-plt.show()
-#plt.savefig(f'./figures/quadratic/{file_name}_newton.png')
+#plt.show()
+#plt.savefig('./figures/well-trained.png')
+plt.savefig(f'./figures/quadratic/{file_name}_newton.png')
